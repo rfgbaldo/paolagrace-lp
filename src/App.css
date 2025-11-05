@@ -1,0 +1,13 @@
+/* Ocupa toda a largura e remove o limite padrão do template do Vite */
+html, body, #root { height: 100%; }
+
+#root {
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  text-align: initial;
+}
+
+/* Cor de fundo global, opcional */
+body { background: #0F203C; }
