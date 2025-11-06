@@ -1,5 +1,7 @@
-// eslint-disable-next-line no-unused-vars
-import React, { useEffect, useCallback } from 'react';
+
+import React, { useEffect, useRef, useState } from 'react';
+
+
 
 // === DADOS E CONFIGURAÇÕES DO PROJETO (ALTAMENTE CONFIGURÁVEL) ===
 
@@ -21,10 +23,11 @@ const projectData = {
   enrollment: "matrícula R$ 260",
   dateLabel: "04-05/12",
   agenda: "São Paulo – 04 e 05/12 • 9h às 18h",
-  instructors: [
-    { name: "Dra. Paola Baldo", cro: "CROSP 88555" },
-    { name: "Dra. Grace Insardi", cro: "CRO 84169" },
-  ],
+    instructors: [
+  { name: "Dra. Paola Baldo", cro: "CROSP 88555", photo: "/instrutoras/paola.jpg" },
+  { name: "Dra. Grace Insardi", cro: "CRO 84169", photo: "/instrutoras/grace.jpg" },
+],
+
   differentials: [
     "Protocolos seguros e integrativos aplicados à HOF",
     "Prática guiada + materiais de suporte",
@@ -48,8 +51,20 @@ const projectData = {
     "\"A atenção pós-curso é o grande diferencial. Protocolos que realmente funcionam e me deram mais segurança na prática clínica.\"",
     "\"Turma reduzida foi essencial para a prática. Saí da imersão com total domínio das técnicas integrativas.\"",
   ],
-  legalNotice: "Curso para profissionais habilitados (CD, médicos e biomédicos). Emissão de certificado. Sujeito a vagas.",
+  legalNotice: "Curso para profissionais habilitados (dentistas, médicos e biomédicos). Emissão de certificado. Sujeito a vagas.",
 };
+
+// Galeria: troque a extensão se não for .jpg
+const galleryImages = [
+  "/galeria/Foto1.jpg",
+  "/galeria/Foto2.jpg",
+  "/galeria/Foto3.jpg",
+  "/galeria/Foto4.jpg",
+  "/galeria/Foto5.jpg",
+  "/galeria/Foto6.jpg",
+  "/galeria/Foto7.jpg",
+];
+
 
 // --- Funções de Rastreamento (Pixel/GTM) ---
 
@@ -68,7 +83,8 @@ const trackConversion = (ctaName) => {
 
 // --- Componentes Reutilizáveis (Para manter o código limpo) ---
 
-const CTAButton = ({ text, style = {}, ctaName, variation = 1, ...props }) => {
+const CTAButton = ({ text, style = {}, ctaName, variation = 1, children, ...props }) => {
+
   const isPrimary = variation === 1; // Falar no WhatsApp
   const finalStyle = {
     ...styles.ctaButton,
@@ -82,18 +98,19 @@ const CTAButton = ({ text, style = {}, ctaName, variation = 1, ...props }) => {
     window.location.href = props.href;
   };
 
-  return (
-    <a
-      href={props.href}
-      style={finalStyle}
-      onClick={handleClick}
-      aria-label={text}
-      role="button"
-      {...props}
-    >
-      {text}
-    </a>
-  );
+return (
+  <a
+    href={props.href}
+    style={finalStyle}
+    onClick={handleClick}
+    aria-label={text}
+    role="button"
+    {...props}
+  >
+    {children ?? text}
+  </a>
+);
+
 };
 
 const Section = ({ id, title, children, style = {} }) => (
@@ -116,6 +133,75 @@ const IconCheck = (props) => (
     />
   </svg>
 );
+
+
+
+// Carrossel automático, pausa no hover e no toque
+const AutoCarousel = ({ images, height = 160, gap = 12, speedSeconds = 40 }) => {
+  // injeta CSS só uma vez
+  useEffect(() => {
+    if (document.getElementById("carousel-css")) return;
+    const styleEl = document.createElement("style");
+    styleEl.id = "carousel-css";
+    styleEl.innerHTML = `
+      @keyframes scrollLoop {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+      }
+      .carousel-viewport {
+        overflow: hidden;
+        width: 100%;
+        mask-image: linear-gradient(to right, transparent 0, black 8%, black 92%, transparent 100%);
+        -webkit-mask-image: linear-gradient(to right, transparent 0, black 8%, black 92%, transparent 100%);
+      }
+      .carousel-track {
+        display: flex;
+        width: max-content;
+        will-change: transform;
+        animation: scrollLoop var(--speed) linear infinite;
+        gap: var(--gap);
+      }
+      .carousel-viewport:hover .carousel-track,
+      .carousel-viewport:active .carousel-track {
+        animation-play-state: paused;
+      }
+      @media (min-width: 600px) {
+        .carousel-item { height: 220px; width: 392px; } /* 16:9 */
+      }
+    `;
+    document.head.appendChild(styleEl);
+  }, []);
+
+  const itemStyle = {
+    height: `${height}px`,
+    width: `${Math.round((height * 16) / 9)}px`,
+    borderRadius: 12,
+    overflow: "hidden",
+    boxShadow: "0 6px 16px rgba(0,0,0,.3)",
+    flex: "0 0 auto",
+  };
+
+  return (
+    <div
+      className="carousel-viewport"
+      style={{ "--gap": `${gap}px`, "--speed": `${speedSeconds}s` }}
+    >
+      <div className="carousel-track">
+        {[...images, ...images].map((src, i) => (
+          <div key={i} className="carousel-item" style={itemStyle}>
+            <img
+              src={src}
+              alt="Momentos das turmas"
+              loading="lazy"
+              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 
 // --- Componente Principal da Landing Page ---
 
@@ -204,6 +290,30 @@ function App() {
 
   }, []);
 
+  // Controle do vídeo e da película
+const videoRef = useRef(null);
+const [showOverlay, setShowOverlay] = useState(true);
+const [showControls, setShowControls] = useState(false);
+
+useEffect(() => {
+  const v = videoRef.current;
+  if (!v) return;
+  v.muted = true;            // garante autoplay em qualquer navegador
+  v.play().catch(() => {});  // ignora bloqueios silenciosamente
+}, []);
+
+const handleUnmuteAndRestart = () => {
+  const v = videoRef.current;
+  if (!v) return;
+  try { v.pause(); } catch { /* empty */ }
+  try { v.currentTime = 0; } catch { /* empty */ }
+  v.muted = false;
+  setShowControls(true);
+  setShowOverlay(false);
+  v.play().catch(() => {});
+};
+
+
   return (
     <div style={{ ...styles.body, overflowX: 'hidden' }}>
 
@@ -241,35 +351,76 @@ function App() {
 }}>
 <div style={{
   marginTop: '12px',
-  borderRadius: '12px',
-  overflow: 'hidden',
-  boxShadow: '0 8px 20px rgba(0,0,0,.25)',
-  border: '1px solid rgba(255,255,255,.12)',
+  marginBottom: '28px',
+  position: 'relative',
   width: '100%',
   maxWidth: 300,
   marginLeft: 'auto',
   marginRight: 'auto',
-  background: 'transparent'
+  background: 'transparent',
+  borderRadius: '12px',
+  overflow: 'hidden',
+  boxShadow: '0 8px 20px rgba(0,0,0,.25)',
+  border: '1px solid rgba(255,255,255,.12)'
 }}>
   <video
+    ref={videoRef}
     autoPlay
-    muted
     loop
     playsInline
-    controls
-    preload="auto"
+    preload="metadata"
+    controls={showControls}
     style={{
       width: '100%',
       height: 'auto',
       aspectRatio: '9 / 16',
-      display: 'block'
+      display: 'block',
+      background: '#000'
     }}
     aria-label="Vídeo da imersão"
   >
+    {/* Se você estiver usando o arquivo comprimido, troque para /video-lp-compressed.mp4 */}
     <source src="/video-lp.mp4" type="video/mp4" />
     Seu navegador não suportou este vídeo.
   </video>
+
+  {showOverlay && (
+    <button
+      onClick={handleUnmuteAndRestart}
+      aria-label="Ativar som e reiniciar vídeo"
+      style={{
+        position: 'absolute',
+        inset: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'rgba(15,32,60,0.40)',
+        border: 'none',
+        cursor: 'pointer'
+      }}
+    >
+      <span style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '10px',
+        padding: '12px 16px',
+        borderRadius: '999px',
+        background: '#FFD700',
+        color: '#0F203C',
+        fontWeight: 800,
+        boxShadow: '0 6px 18px rgba(0,0,0,.35)'
+      }}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M3 10v4h4l5 4V6l-5 4H3z"></path>
+          <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.06c1.48-.74 2.5-2.26 2.5-4.03z"></path>
+          <path d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"></path>
+        </svg>
+        Toque para ativar o som
+      </span>
+    </button>
+  )}
 </div>
+
 
 </div>
 
@@ -330,10 +481,11 @@ function App() {
               <div key={index} style={styles.instructorCard}>
                 {/* TODO: Substitua pelos URLs das fotos das instrutoras (círculo) */}
                 <img
-                  src={`https://via.placeholder.com/150/0F203C/FFFFFF?text=${instructor.name.split(' ')[2]}`}
-                  alt={`Foto da ${instructor.name}`}
-                  style={styles.instructorImage}
-                />
+  src={instructor.photo}
+  alt={`Foto da ${instructor.name}`}
+  style={styles.instructorImage}
+/>
+
                 <h3 style={styles.instructorName}>{instructor.name}</h3>
                 <p style={styles.instructorCro}>{instructor.cro}</p>
               </div>
@@ -352,22 +504,60 @@ function App() {
             ))}
           </div>
         </Section>
+        {/* 6.1 Seção Galeria */}
+<Section id="galeria" title="Momentos de turmas anteriores" style={{ backgroundColor: colors.lightGray }}>
+  <AutoCarousel images={galleryImages} height={160} gap={12} speedSeconds={38} />
+  
+</Section>
+
 
         {/* 7. Seção Local e Agenda */}
         <Section id="agenda" title="Quando e onde">
           <p style={styles.agendaText}>{projectData.agenda}</p>
-          <div style={styles.mapPlaceholder}>
-            {/* TODO: Substitua pelo seu iframe do Google Maps ou um mapa estático da região. */}
-            <p>Mapa do local da imersão em São Paulo (A ser inserido)</p>
-            <a 
-                href="https://maps.app.goo.gl/exemplo" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                style={styles.mapLink}
-            >
-                Ver no Google Maps
-            </a>
-          </div>
+          <div style={{
+  position: 'relative',
+  width: '100%',
+  maxWidth: 600,
+  margin: '0 auto',
+  borderRadius: '8px',
+  overflow: 'hidden',
+  border: `1px solid ${colors.primary}`,
+  backgroundColor: colors.lightGray,
+  paddingTop: '56.25%' // 16 por 9
+}}>
+  <iframe
+    title="Mapa do local do curso"
+    src={"https://www.google.com/maps?q=" +
+         encodeURIComponent("Rua Jesuíno Maciel, 321, Campo Belo, São Paulo, SP") +
+         "&output=embed"}
+    style={{
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+      border: 0
+    }}
+    loading="lazy"
+    referrerPolicy="no-referrer-when-downgrade"
+    allowFullScreen
+  />
+</div>
+
+<div style={{ textAlign: 'center', marginTop: '0.75rem' }}>
+  <a
+    href={
+      "https://www.google.com/maps/search/?api=1&query=" +
+      encodeURIComponent("Rua Jesuíno Maciel, 321, Campo Belo, São Paulo, SP")
+    }
+    target="_blank"
+    rel="noopener noreferrer"
+    style={styles.mapLink}
+  >
+    Ver no Google Maps
+  </a>
+</div>
+
         </Section>
 
         {/* 8. Seção FAQ */}
