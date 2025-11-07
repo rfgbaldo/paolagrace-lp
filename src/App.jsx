@@ -25,7 +25,7 @@ const projectData = {
   agenda: "São Paulo – 04 e 05/12 • 9h às 18h",
     instructors: [
   { name: "Dra. Paola Baldo", cro: "CROSP 88555", photo: "/instrutoras/paola.jpg" },
-  { name: "Dra. Grace Insardi", cro: "CRO 84169", photo: "/instrutoras/grace.jpg" },
+  { name: "Dra. Grace Isnardi", cro: "CRO 84169", photo: "/instrutoras/grace.jpg" },
 ],
 
   differentials: [
