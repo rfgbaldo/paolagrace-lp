@@ -123,11 +123,17 @@ const Section = ({ id, title, children, style = {} }) => (
   </section>
 );
 
-const IconCheck = () => (
-<svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true">
-  <path fill="currentColor" d="M19.11 17.25c-.26-.13-1.54-.76-1.78-.85-.24-.09-.41-.13-.58.13s-.67.85-.82 1.03c-.15.18-.3.2-.56.07-.26-.13-1.08-.4-2.05-1.27-.76-.68-1.27-1.52-1.41-1.77-.15-.26-.02-.39.11-.52.11-.11.26-.3.39-.45.13-.15.17-.26.26-.43.09-.17.04-.32-.02-.45-.07-.13-.58-1.38-.8-1.88-.21-.5-.43-.43-.58-.43h-.49c-.17 0-.45.06-.68.32-.24.26-.9.86-.9 2.09s.93 2.41 1.06 2.58c.13.17 1.82 2.77 4.4 3.88.62.27 1.08.43 1.45.55.61.19 1.17.16 1.61.1.49-.07 1.53-.62 1.75-1.22.22-.6.22-1.11.15-1.22-.06-.11-.23-.17-.49-.3zM16 3C9.37 3 4 8.37 4 15c0 2.03.53 3.98 1.47 5.66L4 29l8.5-2.24A11.96 11.96 0 0 0 16 27c6.63 0 12-5.37 12-12S22.63 3 16 3zm0 22.5c-1.7 0-3.3-.45-4.7-1.23l-.34-.19-5.03 1.33 1.34-4.91-.2-.35A9.47 9.47 0 1 1 25.5 15c0 5.24-4.26 9.5-9.5 9.5z"/>
-</svg>
 
+const IconCheck = (props) => (
+  <svg viewBox="0 0 24 24" fill="none" {...props}>
+    <path
+      d="M20 6L9 17L4 12"
+      stroke="currentColor"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
 );
 
 
@@ -294,9 +300,15 @@ const [showControls, setShowControls] = useState(false);
 useEffect(() => {
   const v = videoRef.current;
   if (!v) return;
-  v.muted = true;            // garante autoplay em qualquer navegador
-  v.play().catch(() => {});  // ignora bloqueios silenciosamente
+  v.muted = true;                       // precisa estar mutado no load
+  const tryPlay = () => v.play().catch(() => {});
+  if (v.readyState >= 2) {
+    tryPlay();                          // já tem dados para tocar
+  } else {
+    v.addEventListener('loadeddata', tryPlay, { once: true });
+  }
 }, []);
+
 
 const handleUnmuteAndRestart = () => {
   const v = videoRef.current;
