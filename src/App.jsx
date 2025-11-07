@@ -3,15 +3,16 @@ import React, { useEffect, useRef, useState } from 'react';
 
 
 
+
 // === DADOS E CONFIGURAÇÕES DO PROJETO (ALTAMENTE CONFIGURÁVEL) ===
 
 // TODO: SUBSTITUA o link do WhatsApp (mantenha a codificação da mensagem)
 const WHATSAPP_LINK_BASE = "https://wa.me/5519982105888?text=Oi%2C%20quero%20saber%20mais%20sobre%20o%20curso%20de%20Terapias%20Injet%C3%A1veis%20em%20SP%20(04-05%2F12).";
 
 // TODO: Configure os parâmetros UTM para rastreamento de anúncios
-const UTM_PARAMS = "?utm_source=instagram&utm_medium=cpc&utm_campaign=imersao-hof-2025&utm_content=stories-reels-mobile";
-const WHATSAPP_LINK = WHATSAPP_LINK_BASE + UTM_PARAMS;
-
+//const UTM_PARAMS = "?utm_source=instagram&utm_medium=cpc&utm_campaign=imersao-hof-2025&utm_content=stories-reels-mobile";
+//const WHATSAPP_LINK = WHATSAPP_LINK_BASE + UTM_PARAMS;
+const WHATSAPP_LINK = WHATSAPP_LINK_BASE
 // TODO: Link da Política de Privacidade (placeholder)
 const PRIVACY_POLICY_LINK = "#politica-de-privacidade"; 
 
@@ -122,16 +123,11 @@ const Section = ({ id, title, children, style = {} }) => (
   </section>
 );
 
-const IconCheck = (props) => (
-  <svg viewBox="0 0 24 24" fill="none" {...props}>
-    <path
-      d="M20 6L9 17L4 12"
-      stroke="currentColor"
-      strokeWidth="3"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
+const IconCheck = () => (
+<svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true">
+  <path fill="currentColor" d="M19.11 17.25c-.26-.13-1.54-.76-1.78-.85-.24-.09-.41-.13-.58.13s-.67.85-.82 1.03c-.15.18-.3.2-.56.07-.26-.13-1.08-.4-2.05-1.27-.76-.68-1.27-1.52-1.41-1.77-.15-.26-.02-.39.11-.52.11-.11.26-.3.39-.45.13-.15.17-.26.26-.43.09-.17.04-.32-.02-.45-.07-.13-.58-1.38-.8-1.88-.21-.5-.43-.43-.58-.43h-.49c-.17 0-.45.06-.68.32-.24.26-.9.86-.9 2.09s.93 2.41 1.06 2.58c.13.17 1.82 2.77 4.4 3.88.62.27 1.08.43 1.45.55.61.19 1.17.16 1.61.1.49-.07 1.53-.62 1.75-1.22.22-.6.22-1.11.15-1.22-.06-.11-.23-.17-.49-.3zM16 3C9.37 3 4 8.37 4 15c0 2.03.53 3.98 1.47 5.66L4 29l8.5-2.24A11.96 11.96 0 0 0 16 27c6.63 0 12-5.37 12-12S22.63 3 16 3zm0 22.5c-1.7 0-3.3-.45-4.7-1.23l-.34-.19-5.03 1.33 1.34-4.91-.2-.35A9.47 9.47 0 1 1 25.5 15c0 5.24-4.26 9.5-9.5 9.5z"/>
+</svg>
+
 );
 
 
@@ -366,6 +362,7 @@ const handleUnmuteAndRestart = () => {
   <video
     ref={videoRef}
     autoPlay
+    muted           // manter no markup para o autoplay funcionar no mobile
     loop
     playsInline
     preload="metadata"
@@ -379,7 +376,7 @@ const handleUnmuteAndRestart = () => {
     }}
     aria-label="Vídeo da imersão"
   >
-    {/* Se você estiver usando o arquivo comprimido, troque para /video-lp-compressed.mp4 */}
+    {/* use o arquivo comprimido se tiver */}
     <source src="/video-lp.mp4" type="video/mp4" />
     Seu navegador não suportou este vídeo.
   </video>
@@ -419,6 +416,7 @@ const handleUnmuteAndRestart = () => {
       </span>
     </button>
   )}
+
 </div>
 
 
@@ -1031,31 +1029,24 @@ body: {
   },
 
   // --- Botão Flutuante ---
-  floatingCta: {
-    position: 'fixed',
-    bottom: '20px',
-    right: '20px',
-    width: '55px',
-    height: '55px',
-    borderRadius: '50%',
-    backgroundColor: '#25D366', // Cor do WhatsApp
-    color: colors.white,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.4)',
-    zIndex: 1001,
-    padding: 0,
-    textIndent: '-9999px', // Esconde o texto, mantendo o aria-label
-    fontSize: '0', // Garante que o texto não apareça
-  },
-  whatsappIcon: {
-    width: '30px',
-    height: '30px',
-    color: colors.white,
-    textIndent: '0',
-    display: 'block',
-  },
+floatingCta: {
+  position: 'fixed',
+  bottom: '20px',
+  right: '20px',
+  width: '55px',
+  height: '55px',
+  borderRadius: '50%',
+  backgroundColor: '#25D366',
+  color: colors.white,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  boxShadow: '0 4px 10px rgba(0, 0, 0, 0.4)',
+  zIndex: 1001,
+  padding: 0,
+  lineHeight: 0        // evita texto fantasma sem afetar o SVG
+},
+
   
   // --- Media Query para Desktop/Tablet (Exemplo Básico) ---
   // Nota: Estilos inline JS não suportam media queries simples. 
