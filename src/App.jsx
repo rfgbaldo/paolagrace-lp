@@ -300,14 +300,46 @@ const [showControls, setShowControls] = useState(false);
 useEffect(() => {
   const v = videoRef.current;
   if (!v) return;
-  v.muted = true;                       // precisa estar mutado no load
+
+  // garante atributos e propriedades desde o início
+  v.muted = true;
+  v.defaultMuted = true;
+  v.playsInline = true;
+
   const tryPlay = () => v.play().catch(() => {});
+
+  // tenta assim que houver dados suficientes
   if (v.readyState >= 2) {
-    tryPlay();                          // já tem dados para tocar
+    tryPlay();
   } else {
-    v.addEventListener('loadeddata', tryPlay, { once: true });
+    const onLoadedMeta = () => tryPlay();
+    v.addEventListener('loadedmetadata', onLoadedMeta, { once: true });
+    // limpeza
+    return () => v.removeEventListener('loadedmetadata', onLoadedMeta);
   }
+
+  // primeira interação do usuário em qualquer lugar da página, força o play se ainda estiver pausado
+  const onFirstGesture = () => {
+    if (v.paused) tryPlay();
+    document.removeEventListener('touchstart', onFirstGesture);
+    document.removeEventListener('click', onFirstGesture);
+  };
+  document.addEventListener('touchstart', onFirstGesture, { once: true });
+  document.addEventListener('click', onFirstGesture, { once: true });
+
+  // quando voltar de outra aba
+  const onVisibility = () => {
+    if (!document.hidden && v.paused) tryPlay();
+  };
+  document.addEventListener('visibilitychange', onVisibility);
+
+  return () => {
+    document.removeEventListener('touchstart', onFirstGesture);
+    document.removeEventListener('click', onFirstGesture);
+    document.removeEventListener('visibilitychange', onVisibility);
+  };
 }, []);
+
 
 
 const handleUnmuteAndRestart = () => {
@@ -371,27 +403,22 @@ const handleUnmuteAndRestart = () => {
   boxShadow: '0 8px 20px rgba(0,0,0,.25)',
   border: '1px solid rgba(255,255,255,.12)'
 }}>
-  <video
-    ref={videoRef}
-    autoPlay
-    muted           // manter no markup para o autoplay funcionar no mobile
-    loop
-    playsInline
-    preload="metadata"
-    controls={showControls}
-    style={{
-      width: '100%',
-      height: 'auto',
-      aspectRatio: '9 / 16',
-      display: 'block',
-      background: '#000'
-    }}
-    aria-label="Vídeo da imersão"
-  >
-    {/* use o arquivo comprimido se tiver */}
-    <source src="/video-lp.mp4" type="video/mp4" />
-    Seu navegador não suportou este vídeo.
-  </video>
+<video
+  ref={videoRef}
+  autoPlay
+  muted
+  defaultMuted
+  playsInline
+  loop
+  preload="metadata"
+  controls={showControls}
+  style={{ width: '100%', height: 'auto', aspectRatio: '9 / 16', display: 'block', background: '#000' }}
+  aria-label="Vídeo da imersão"
+>
+  <source src="/video-lp.mp4" type="video/mp4" />
+  Seu navegador não suportou este vídeo.
+</video>
+
 
   {showOverlay && (
     <button
@@ -617,9 +644,13 @@ const handleUnmuteAndRestart = () => {
         variation={1} // Primário
         aria-label="Fale conosco no WhatsApp"
       >
-        <svg style={styles.whatsappIcon} viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12.031 2C6.586 2 2.115 6.467 2.115 11.908c0 1.838.487 3.593 1.411 5.122L2.012 22.18l4.456-1.168c1.472.802 3.142 1.226 4.963 1.226 5.446 0 9.916-4.471 9.916-9.918C21.347 6.467 16.878 2 12.031 2zM17.062 15.657c-.15.405-.884.725-1.218.824-.316.09-.691.134-1.066.045-.291-.072-.676-.234-1.173-.424-.552-.22-.92-.358-1.214-.469-.294-.112-.663-.298-1.02-.497-.36-.2-.673-.422-.977-.665-.3-.245-.605-.536-.913-.867-.31-.33-.615-.718-.894-1.127-.28-.408-.506-.87-.696-1.393-.189-.523-.298-1.107-.354-1.722-.055-.613.11-1.196.347-1.685.235-.488.59-.877 1.056-1.144.464-.266.974-.383 1.48-.383.189 0 .412.03.66.03.245.006.452.006.674.006.223 0 .46-.075.666.455.207.53.682 1.76 1.042 2.585.36.825.617 1.09.707 1.21.09.117.15.228.257.43.108.2.195.422.28.613.085.19.16.417.202.666.042.248.04.5.01.76-.03.26-.08.52-.16.78-.08.26-.17.51-.28.75s-.24.49-.37.71s-.29.41-.46.59c-.16.18-.36.35-.58.5s-.46.33-.71.49z"/>
-        </svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" style={styles.whatsappIcon}>
+  <path
+    fill="currentColor"
+    d="M20.52 3.48A11.87 11.87 0 0 0 12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.09 1.52 5.82L0 24l6.33-1.48A11.95 11.95 0 0 0 12 24c6.63 0 12-5.37 12-12 0-3.18-1.24-6.17-3.48-8.52zM12 22.09c-1.88 0-3.64-.49-5.17-1.34l-.37-.21-3.75.88.9-3.66-.24-.38A9.91 9.91 0 0 1 2.09 12C2.09 6.59 6.59 2.09 12 2.09S21.91 6.59 21.91 12 17.41 21.91 12 21.91zm5.61-6.16c-.31-.15-1.8-.89-2.08-.99-.28-.1-.48-.15-.68.15-.2.31-.78.99-.96 1.19-.18.2-.35.23-.65.08-.3-.15-1.25-.46-2.31-1.48-.86-.77-1.44-1.71-1.61-2.01-.17-.3-.02-.46.12-.61.13-.13.3-.34.45-.51.15-.17.2-.29.3-.49.1-.2.05-.37-.03-.52-.07-.15-.68-1.65-.93-2.25-.25-.59-.5-.51-.68-.52-.18-.01-.38-.01-.58-.01-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48 0 1.46 1.07 2.88 1.21 3.08.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.7.63.71.23 1.36.2 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35z"
+  />
+</svg>
+
       </CTAButton>
       
       {/* CSS Crítico Inline (Mobile First 9:16) */}
