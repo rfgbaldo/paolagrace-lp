@@ -1,6 +1,9 @@
 
 import React, { useEffect, useRef, useState } from 'react';
+import { supabase } from './lib/supabaseClient';
 
+console.log('URL', import.meta.env.VITE_SUPABASE_URL);
+console.log('KEY', import.meta.env.VITE_SUPABASE_ANON_KEY ? 'ok' : 'faltando');
 
 
 
@@ -93,11 +96,22 @@ const CTAButton = ({ text, style = {}, ctaName, variation = 1, children, ...prop
     ...style
   };
 
-  const handleClick = (e) => {
-    e.preventDefault();
-    trackConversion(ctaName);
-    window.location.href = props.href;
-  };
+const handleClick = async (e) => {
+  e.preventDefault();
+  trackConversion(ctaName);
+
+  const go = () => { window.location.href = props.href; };
+
+  try {
+    await Promise.race([
+      logClick(ctaName || 'cta_sem_nome', props.href),
+      new Promise((res) => setTimeout(res, 350))
+    ]);
+  } finally {
+    go();
+  }
+};
+
 
 return (
   <a
@@ -204,6 +218,40 @@ const AutoCarousel = ({ images, height = 160, gap = 12, speedSeconds = 40 }) => 
   );
 };
 
+function getUTM() {
+  const p = new URLSearchParams(window.location.search);
+  return {
+    utm_source: p.get('utm_source'),
+    utm_medium: p.get('utm_medium'),
+    utm_campaign: p.get('utm_campaign'),
+    utm_content: p.get('utm_content'),
+    utm_term: p.get('utm_term'),
+  };
+}
+
+async function logView() {
+  const payload = {
+    path: window.location.pathname + window.location.search,
+    referrer: document.referrer || null,
+    user_agent: navigator.userAgent.slice(0, 500),
+    ...getUTM(),
+  };
+  await supabase.from('lp_page_views').insert(payload);
+}
+
+async function logClick(ctaName, href) {
+  const payload = {
+    cta_name: ctaName,
+    href,
+    path: window.location.pathname + window.location.search,
+    referrer: document.referrer || null,
+    user_agent: navigator.userAgent.slice(0, 500),
+    ...getUTM(),
+  };
+  await supabase.from('lp_clicks').insert(payload);
+}
+
+
 
 // --- Componente Principal da Landing Page ---
 
@@ -291,6 +339,15 @@ function App() {
     document.head.appendChild(favicon);
 
   }, []);
+
+  useEffect(() => {
+  // evita duplicar no mesmo carregamento
+  if (!window.__loggedView) {
+    window.__loggedView = true;
+    logView().catch(() => {});
+  }
+}, []);
+
 
   // Controle do vídeo e da película
 const videoRef = useRef(null);
