@@ -28,9 +28,10 @@ const projectData = {
   dateLabel: "04-05/12",
   agenda: "São Paulo – 04 e 05/12 • 9h às 18h",
     instructors: [
-  { name: "Dra. Paola Baldo", cro: "CROSP 88555", photo: "/instrutoras/paola.jpg" },
-  { name: "Dra. Grace Isnardi", cro: "CRO 84169", photo: "/instrutoras/grace.jpg" },
-],
+    { name: "Dra. Paola Baldo", cro: "CROSP 88555", photo: "/instrutoras/paola.jpg", instagram: "https://www.instagram.com/dra.paolabaldo" },
+    { name: "Dra. Grace Isnardi", cro: "CRO 84169", photo: "/instrutoras/grace.jpg", instagram: "https://www.instagram.com/dra.graceisnardi/" },
+  ],
+  
 
   differentials: [
     "Protocolos seguros e integrativos aplicados à HOF",
@@ -70,6 +71,7 @@ const galleryImages = [
 ];
 
 
+
 // --- Funções de Rastreamento (Pixel/GTM) ---
 
 const trackConversion = (ctaName) => {
@@ -88,44 +90,49 @@ const trackConversion = (ctaName) => {
 // --- Componentes Reutilizáveis (Para manter o código limpo) ---
 
 const CTAButton = ({ text, style = {}, ctaName, variation = 1, children, ...props }) => {
-
-  const isPrimary = variation === 1; // Falar no WhatsApp
+  const isPrimary = variation === 1;
   const finalStyle = {
     ...styles.ctaButton,
     ...(isPrimary ? styles.ctaPrimary : styles.ctaSecondary),
     ...style
   };
 
-const handleClick = async (e) => {
-  e.preventDefault();
-  trackConversion(ctaName);
+  const handleClick = async (e) => {
+    e.preventDefault();
+    trackConversion(ctaName);
+    const href = props.href;
 
-  const go = () => { window.location.href = props.href; };
+    // abre a nova aba imediatamente para não ser bloqueado
+    const win = window.open('about:blank', '_blank', 'noopener,noreferrer');
 
-  try {
-    await Promise.race([
-      logClick(ctaName || 'cta_sem_nome', props.href),
-      new Promise((res) => setTimeout(res, 350))
-    ]);
-  } finally {
-    go();
-  }
-};
+    try {
+      await Promise.race([
+        logClick(ctaName || 'cta_sem_nome', href),
+        new Promise((res) => setTimeout(res, 350))
+      ]);
+    } finally {
+      if (win && !win.closed) {
+        win.location.href = href;
+      } else {
+        window.open(href, '_blank', 'noopener,noreferrer');
+      }
+    }
+  };
 
-
-return (
-  <a
-    href={props.href}
-    style={finalStyle}
-    onClick={handleClick}
-    aria-label={text}
-    role="button"
-    {...props}
-  >
-    {children ?? text}
-  </a>
-);
-
+  return (
+    <a
+      href={props.href}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={finalStyle}
+      onClick={handleClick}
+      aria-label={text}
+      role="button"
+      {...props}
+    >
+      {children ?? text}
+    </a>
+  );
 };
 
 const Section = ({ id, title, children, style = {} }) => (
@@ -149,6 +156,14 @@ const IconCheck = (props) => (
     />
   </svg>
 );
+
+const InstagramIcon = (props) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
+    <path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7zm5 3.5A5.5 5.5 0 1 1 6.5 13 5.5 5.5 0 0 1 12 7.5zm0 2A3.5 3.5 0 1 0 15.5 13 3.5 3.5 0 0 0 12 9.5zM18 6.2a1 1 0 1 1-1 1 1 1 0 0 1 1-1z"/>
+  </svg>
+);
+
+
 
 
 
@@ -582,6 +597,19 @@ const handleUnmuteAndRestart = () => {
 
                 <h3 style={styles.instructorName}>{instructor.name}</h3>
                 <p style={styles.instructorCro}>{instructor.cro}</p>
+                {instructor.instagram && (
+                  <a
+                    href={instructor.instagram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => logClick(`instagram_${instructor.name}`, instructor.instagram)}
+                    style={styles.igLink}
+                    aria-label={`Instagram de ${instructor.name}`}
+                  >
+                    <InstagramIcon width="16" height="16" style={{ marginRight: 8 }} />
+                    {new URL(instructor.instagram).pathname.replace(/\//g, "")}
+                  </a>
+                )}
               </div>
             ))}
           </div>
@@ -996,6 +1024,22 @@ body: {
     color: colors.text,
     opacity: 0.7,
   },
+
+  igLink: {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "8px",
+  marginTop: "10px",
+  padding: "6px 10px",
+  borderRadius: "999px",
+  textDecoration: "none",
+  fontWeight: 700,
+  backgroundColor: colors.secondary,
+  color: colors.primary,
+  boxShadow: "0 2px 6px rgba(0,0,0,.15)",
+  border: `2px solid ${colors.secondary}`
+},
+
   
   // --- Seção Depoimentos ---
   testimonialsGrid: {
