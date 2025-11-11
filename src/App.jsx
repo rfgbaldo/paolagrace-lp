@@ -10,7 +10,8 @@ console.log('KEY', import.meta.env.VITE_SUPABASE_ANON_KEY ? 'ok' : 'faltando');
 // === DADOS E CONFIGURAÇÕES DO PROJETO (ALTAMENTE CONFIGURÁVEL) ===
 
 // TODO: SUBSTITUA o link do WhatsApp (mantenha a codificação da mensagem)
-const WHATSAPP_LINK_BASE = "https://wa.me/5519982105888?text=Oi%2C%20quero%20saber%20mais%20sobre%20o%20curso%20de%20Terapias%20Injet%C3%A1veis%20em%20SP%20(04-05%2F12).";
+
+const WHATSAPP_LINK_BASE = "https://api.whatsapp.com/send?phone=5519982105888&text=Oi%2C%20quero%20saber%20mais%20sobre%20o%20curso%20de%20Terapias%20Injet%C3%A1veis%20em%20SP%20(04-05%2F12).";
 
 // TODO: Configure os parâmetros UTM para rastreamento de anúncios
 //const UTM_PARAMS = "?utm_source=instagram&utm_medium=cpc&utm_campaign=imersao-hof-2025&utm_content=stories-reels-mobile";
@@ -97,43 +98,34 @@ const CTAButton = ({ text, style = {}, ctaName, variation = 1, children, ...prop
     ...style
   };
 
-  const handleClick = async (e) => {
-    e.preventDefault();
+  const href = props.href;
+  const isWhatsApp = /(?:wa\.me|api\.whatsapp\.com|whatsapp:\/\/)/i.test(href);
+
+  // WhatsApp abre na mesma aba; outros continuam em nova aba
+  const target = isWhatsApp ? "_self" : "_blank";
+  const rel = isWhatsApp ? undefined : "noopener noreferrer";
+
+  const handleClick = () => {
+    // não bloquear a navegação
     trackConversion(ctaName);
-    const href = props.href;
-
-    // abre a nova aba imediatamente para não ser bloqueado
-    const win = window.open('about:blank', '_blank', 'noopener,noreferrer');
-
-    try {
-      await Promise.race([
-        logClick(ctaName || 'cta_sem_nome', href),
-        new Promise((res) => setTimeout(res, 350))
-      ]);
-    } finally {
-      if (win && !win.closed) {
-        win.location.href = href;
-      } else {
-        window.open(href, '_blank', 'noopener,noreferrer');
-      }
-    }
+    try { setTimeout(() => { logClick(ctaName || "cta_sem_nome", href); }, 0); } catch { /* empty */ }
   };
 
   return (
     <a
-      href={props.href}
-      target="_blank"
-      rel="noopener noreferrer"
+      href={href}
+      target={target}
+      rel={rel}
       style={finalStyle}
       onClick={handleClick}
       aria-label={text}
-      role="button"
       {...props}
     >
       {children ?? text}
     </a>
   );
 };
+
 
 const Section = ({ id, title, children, style = {} }) => (
   <section id={id} style={{ ...styles.section, ...style }}>
