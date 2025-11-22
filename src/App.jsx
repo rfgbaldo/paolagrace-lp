@@ -23,7 +23,7 @@ const PRIVACY_POLICY_LINK = "#politica-de-privacidade";
 const projectData = {
   title: "Imersão Terapias Injetáveis para HOF – 04 e 05/12 (São Paulo)",
   subtitle: "Para cirurgiões-dentistas, médicos e biomédicos que querem potencializar resultados na harmonização facial.",
-  heroSubheadline: "Potencialize seus resultados na harmonização facial com protocolos seguros e integrativos.",
+  heroSubheadline: "Eleve os resultados da harmonização facial, use protocolos injetáveis com segurança, prática guiada e aplicação imediata na clínica.",
   value: "R$ 1.700 em até 10x",
   enrollment: "matrícula R$ 260",
   dateLabel: "04-05/12",
@@ -258,6 +258,30 @@ async function logClick(ctaName, href) {
   await supabase.from('lp_clicks').insert(payload);
 }
 
+// Countdown para o evento
+function Countdown({ target = "2025-12-04T09:00:00-03:00" }) {
+  const [left, setLeft] = useState(() => new Date(target).getTime() - Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => setLeft(new Date(target).getTime() - Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [target]);
+
+  if (left <= 0) return null;
+
+  const total = Math.max(0, left);
+  const d = Math.floor(total / 86400000);
+  const h = Math.floor((total % 86400000) / 3600000);
+  const m = Math.floor((total % 3600000) / 60000);
+  const s = Math.floor((total % 60000) / 1000);
+
+  return (
+    <div style={styles.countdownBox} aria-label="Contagem regressiva">
+      <span style={styles.countdownDot} />
+      Faltam {d}d {String(h).padStart(2,'0')}:{String(m).padStart(2,'0')}:{String(s).padStart(2,'0')} para o início
+    </div>
+  );
+}
 
 
 // --- Componente Principal da Landing Page ---
@@ -441,111 +465,125 @@ const handleUnmuteAndRestart = () => {
         {/* 2. Seção Hero */}
         <Section id="hero" style={styles.heroSection}>
           <div style={styles.heroContent}>
-            <span style={styles.dateBadge}>{projectData.dateLabel}</span>
-            <h1 style={styles.heroTitle}>{projectData.title}</h1>
-            <p style={styles.heroSubtitle}>{projectData.heroSubheadline}</p>
-            <div style={{
-  marginTop: '12px',
-  marginBottom: '28px',   // adicione esta linha
-  borderRadius: '12px',
-  overflow: 'hidden',
-  boxShadow: '0 8px 20px rgba(0,0,0,.25)',
-  border: '1px solid rgba(255,255,255,.12)',
-  background: '#0F203C'
-}}>
-<div style={{
-  marginTop: '12px',
-  marginBottom: '28px',
-  position: 'relative',
-  width: '100%',
-  maxWidth: 300,
-  marginLeft: 'auto',
-  marginRight: 'auto',
-  background: 'transparent',
-  borderRadius: '12px',
-  overflow: 'hidden',
-  boxShadow: '0 8px 20px rgba(0,0,0,.25)',
-  border: '1px solid rgba(255,255,255,.12)'
-}}>
-<video
-  ref={videoRef}
-  autoPlay
-  muted
-  defaultMuted
-  playsInline
-  loop
-  preload="metadata"
-  controls={showControls}
-  style={{ width: '100%', height: 'auto', aspectRatio: '9 / 16', display: 'block', background: '#000' }}
-  aria-label="Vídeo da imersão"
->
-  <source src="/video-lp.mp4" type="video/mp4" />
-  Seu navegador não suportou este vídeo.
-</video>
+  <span style={styles.dateBadge}>{projectData.dateLabel}</span>
+  <h1 style={styles.heroTitle}>{projectData.title}</h1>
+  <p style={styles.heroSubtitle}>{projectData.heroSubheadline}</p>
 
+  <Countdown />
 
-  {showOverlay && (
-    <button
-      onClick={handleUnmuteAndRestart}
-      aria-label="Ativar som e reiniciar vídeo"
-      style={{
-        position: 'absolute',
-        inset: 0,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'rgba(15,32,60,0.40)',
-        border: 'none',
-        cursor: 'pointer'
-      }}
-    >
-      <span style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '10px',
-        padding: '12px 16px',
-        borderRadius: '999px',
-        background: '#FFD700',
-        color: '#0F203C',
-        fontWeight: 800,
-        boxShadow: '0 6px 18px rgba(0,0,0,.35)'
-      }}>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <path d="M3 10v4h4l5 4V6l-5 4H3z"></path>
-          <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.06c1.48-.74 2.5-2.26 2.5-4.03z"></path>
-          <path d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"></path>
-        </svg>
-        Toque para ativar o som
-      </span>
-    </button>
-  )}
+  {/* Selos de valor logo acima do CTA */}
+  <div style={styles.badgesRow}>
+    <div style={styles.badge}>Prática guiada</div>
+    <div style={styles.badge}>Suporte pós curso</div>
+    <div style={styles.badge}>Certificado</div>
+  </div>
 
+  {/* CTA vem antes do vídeo para converter no topo */}
+  <CTAButton
+    text="Falar com a equipe agora no WhatsApp"
+    href={WHATSAPP_LINK}
+    ctaName="hero_principal_top"
+    variation={2}
+    style={styles.ctaHero}
+  />
+
+  {/* Vídeo do herói */}
+  <div style={{
+    marginTop: '12px',
+    marginBottom: '28px',
+    borderRadius: '12px',
+    overflow: 'hidden',
+    boxShadow: '0 8px 20px rgba(0,0,0,.25)',
+    border: '1px solid rgba(255,255,255,.12)',
+    background: '#0F203C'
+  }}>
+    <div style={{
+      marginTop: '12px',
+      marginBottom: '28px',
+      position: 'relative',
+      width: '100%',
+      maxWidth: 300,
+      marginLeft: 'auto',
+      marginRight: 'auto',
+      background: 'transparent',
+      borderRadius: '12px',
+      overflow: 'hidden',
+      boxShadow: '0 8px 20px rgba(0,0,0,.25)',
+      border: '1px solid rgba(255,255,255,.12)'
+    }}>
+      <video
+        ref={videoRef}
+        autoPlay
+        muted
+        defaultMuted
+        playsInline
+        loop
+        preload="metadata"
+        controls={showControls}
+        style={{ width: '100%', height: 'auto', aspectRatio: '9 / 16', display: 'block', background: '#000' }}
+        aria-label="Vídeo da imersão"
+      >
+        <source src="/video-lp.mp4" type="video/mp4" />
+        Seu navegador não suportou este vídeo.
+      </video>
+
+      {showOverlay && (
+        <button
+          onClick={handleUnmuteAndRestart}
+          aria-label="Ativar som e reiniciar vídeo"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'rgba(15,32,60,0.40)',
+            border: 'none',
+            cursor: 'pointer'
+          }}
+        >
+          <span style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '10px',
+            padding: '12px 16px',
+            borderRadius: '999px',
+            background: '#FFD700',
+            color: '#0F203C',
+            fontWeight: 800,
+            boxShadow: '0 6px 18px rgba(0,0,0,.35)'
+          }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M3 10v4h4l5 4V6l-5 4H3z"></path>
+              <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.06c1.48-.74 2.5-2.26 2.5-4.03z"></path>
+              <path d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"></path>
+            </svg>
+            Toque para ativar o som
+          </span>
+        </button>
+      )}
+    </div>
+  </div>
+
+  {/* Caixa de preço permanece abaixo do vídeo */}
+  <div style={styles.priceBox}>
+    <p style={styles.priceValue}>{projectData.value}</p>
+    <p style={styles.priceEnrollment}>+ {projectData.enrollment}</p>
+    <p style={styles.priceDisclaimer}>Vagas limitadas</p>
+  </div>
+
+  {/* Segundo CTA logo depois do preço para reforço */}
+  <CTAButton
+    text="Quero garantir minha vaga"
+    href={WHATSAPP_LINK}
+    ctaName="hero_principal"
+    variation={2}
+    style={styles.ctaHero}
+  />
+
+  <p style={styles.targetAudience}>{projectData.subtitle}</p>
 </div>
 
-
-</div>
-
-
-            <div style={styles.priceBox}>
-              <p style={styles.priceValue}>
-                {projectData.value}
-              </p>
-              <p style={styles.priceEnrollment}>+ {projectData.enrollment}</p>
-              <p style={styles.priceDisclaimer}>Vagas limitadas</p>
-            </div>
-
-            <CTAButton
-              text="Quero garantir minha vaga"
-              href={WHATSAPP_LINK}
-              ctaName="hero_principal"
-              variation={2}
-              style={styles.ctaHero}
-            />
-
-
-
-            <p style={styles.targetAudience}>{projectData.subtitle}</p>
-          </div>
         </Section>
 
         {/* 3. Seção Diferenciais */}
@@ -712,23 +750,18 @@ const handleUnmuteAndRestart = () => {
         </div>
       </footer>
 
-      {/* 4. Botão Flutuante do WhatsApp */}
-      <CTAButton
-        text="WhatsApp"
-        href={WHATSAPP_LINK}
-        ctaName="botao_flutuante"
-        style={styles.floatingCta}
-        variation={1} // Primário
-        aria-label="Fale conosco no WhatsApp"
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" style={styles.whatsappIcon}>
-  <path
-    fill="currentColor"
-    d="M20.52 3.48A11.87 11.87 0 0 0 12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.09 1.52 5.82L0 24l6.33-1.48A11.95 11.95 0 0 0 12 24c6.63 0 12-5.37 12-12 0-3.18-1.24-6.17-3.48-8.52zM12 22.09c-1.88 0-3.64-.49-5.17-1.34l-.37-.21-3.75.88.9-3.66-.24-.38A9.91 9.91 0 0 1 2.09 12C2.09 6.59 6.59 2.09 12 2.09S21.91 6.59 21.91 12 17.41 21.91 12 21.91zm5.61-6.16c-.31-.15-1.8-.89-2.08-.99-.28-.1-.48-.15-.68.15-.2.31-.78.99-.96 1.19-.18.2-.35.23-.65.08-.3-.15-1.25-.46-2.31-1.48-.86-.77-1.44-1.71-1.61-2.01-.17-.3-.02-.46.12-.61.13-.13.3-.34.45-.51.15-.17.2-.29.3-.49.1-.2.05-.37-.03-.52-.07-.15-.68-1.65-.93-2.25-.25-.59-.5-.51-.68-.52-.18-.01-.38-.01-.58-.01-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48 0 1.46 1.07 2.88 1.21 3.08.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.7.63.71.23 1.36.2 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35z"
+      {/* Barra fixa no rodapé com CTA */}
+<div style={styles.stickyBar} role="region" aria-label="Ação rápida">
+  <span style={styles.stickyText}>Turma de 4 e 5 de dezembro em São Paulo. Vagas limitadas.</span>
+  <CTAButton
+    text="Falar no WhatsApp"
+    href={WHATSAPP_LINK}
+    ctaName="sticky_bar"
+    variation={1}
+    style={styles.stickyBarCta}
   />
-</svg>
+</div>
 
-      </CTAButton>
       
       {/* CSS Crítico Inline (Mobile First 9:16) */}
       <style>{`
@@ -1182,6 +1215,74 @@ floatingCta: {
   padding: 0,
   lineHeight: 0        // evita texto fantasma sem afetar o SVG
 },
+
+// Contagem regressiva
+countdownBox: {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '8px',
+  padding: '6px 12px',
+  borderRadius: '999px',
+  background: 'rgba(255,255,255,.15)',
+  backdropFilter: 'blur(4px)',
+  margin: '10px 0 12px 0',
+  fontWeight: 700
+},
+countdownDot: {
+  width: 8,
+  height: 8,
+  borderRadius: '50%',
+  background: '#FFD700',
+  display: 'inline-block'
+},
+
+// Selos
+badgesRow: {
+  display: 'flex',
+  gap: '8px',
+  justifyContent: 'center',
+  flexWrap: 'wrap',
+  margin: '10px 0 16px 0'
+},
+badge: {
+  fontSize: '.85rem',
+  fontWeight: 700,
+  backgroundColor: '#FFFFFF',
+  color: '#0F203C',
+  border: '1px solid rgba(0,0,0,.06)',
+  borderRadius: '999px',
+  padding: '6px 10px',
+  boxShadow: '0 2px 6px rgba(0,0,0,.08)'
+},
+
+// Barra fixa
+stickyBar: {
+  position: 'fixed',
+  left: 0,
+  right: 0,
+  bottom: 0,
+  zIndex: 1002,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: '12px',
+  padding: '10px 14px',
+  background: '#0F203C',
+  borderTop: '1px solid rgba(255,255,255,.12)'
+},
+stickyText: {
+  color: '#FFFFFF',
+  fontSize: '.95rem',
+  lineHeight: 1.2,
+  flex: 1,
+  paddingRight: 8
+},
+stickyBarCta: {
+  width: 'auto',
+  minWidth: 180,
+  margin: 0
+},
+
 
   
   // --- Media Query para Desktop/Tablet (Exemplo Básico) ---
